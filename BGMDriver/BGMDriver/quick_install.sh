@@ -100,7 +100,7 @@ get_build_path() {
         echo "build. Probably something like"
         echo -n "/Users/$(whoami)/Library/Developer/Xcode/DerivedData/BGM-somerandomchars/Build/Products/"
         ([[ ${USE_RELEASE_BUILD} == true ]] && echo -n "Release") || echo -n "Debug"
-        echo "/Background Music Device.driver"
+        echo "/CleanShot Device.driver"
         cd /
         read -e -p ": /" DRIVER_PATH
         cd -
@@ -173,7 +173,7 @@ fi
 # Remove installed build
 
 HAL_PLUGINS_DIR="/Library/Audio/Plug-Ins/HAL"
-INSTALLED_DRIVER_PATH="${HAL_PLUGINS_DIR}/Background Music Device.driver"
+INSTALLED_DRIVER_PATH="${HAL_PLUGINS_DIR}/CleanShot Device.driver"
 
 if [[ -d "${INSTALLED_DRIVER_PATH}" ]]; then
     echo "$(bold_face Removing old version of the driver)"
@@ -206,7 +206,8 @@ if [[ ${DONT_RESTART_COREAUDIOD} == false ]]; then
     echo "$(bold_face Restarting coreaudiod). If a running app stops playing audio, change your default audio device (and change it back if you want) or open BGMApp."
 
     # ("set -x" so the command is echoed)
-    (set -x; sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod || sudo killall coreaudiod)
+    (set -x; sudo launchctl kickstart -k system/com.apple.audio.coreaudiod &>/dev/null || \
+        sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod || sudo killall coreaudiod)
 fi
 
 

@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "1CB8B3631BBBB78D000E2DD1"
-               BuildableName = "Cleanshot Device.driver"
-               BlueprintName = "Cleanshot Device"
+               BuildableName = "CleanShot Device.driver"
+               BlueprintName = "CleanShot Device"
                ReferencedContainer = "container:BGMDriver.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -36,8 +36,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1CB8B3631BBBB78D000E2DD1"
-            BuildableName = "Cleanshot Device.driver"
-            BlueprintName = "Cleanshot Device"
+            BuildableName = "CleanShot Device.driver"
+            BlueprintName = "CleanShot Device"
             ReferencedContainer = "container:BGMDriver.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -45,8 +45,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1CB8B3631BBBB78D000E2DD1"
-            BuildableName = "Cleanshot Device.driver"
-            BlueprintName = "Cleanshot Device"
+            BuildableName = "CleanShot Device.driver"
+            BlueprintName = "CleanShot Device"
             ReferencedContainer = "container:BGMDriver.xcodeproj">
          </BuildableReference>
       </CodeCoverageTargets>
@@ -66,7 +66,7 @@
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       debugAsWhichUser = "root"
@@ -86,8 +86,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1CB8B3631BBBB78D000E2DD1"
-            BuildableName = "Cleanshot Device.driver"
-            BlueprintName = "Cleanshot Device"
+            BuildableName = "CleanShot Device.driver"
+            BlueprintName = "CleanShot Device"
             ReferencedContainer = "container:BGMDriver.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -109,8 +109,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1CB8B3631BBBB78D000E2DD1"
-            BuildableName = "Cleanshot Device.driver"
-            BlueprintName = "Cleanshot Device"
+            BuildableName = "CleanShot Device.driver"
+            BlueprintName = "CleanShot Device"
             ReferencedContainer = "container:BGMDriver.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
