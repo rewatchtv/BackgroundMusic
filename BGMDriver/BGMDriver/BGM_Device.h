@@ -205,9 +205,9 @@ private:
     static BGM_Device* __nonnull    sInstance;
     static BGM_Device* __nonnull    sUISoundsInstance;
     
-    #define kDeviceName                 "Background Music"
-    #define kDeviceName_UISounds        "Background Music (UI Sounds)"
-    #define kDeviceManufacturerName     "Background Music contributors"
+    #define kDeviceName                 "CleanShot X Recorder"
+    #define kDeviceName_UISounds        "CleanShot X Recorder (UI Sounds)"
+    #define kDeviceManufacturerName     "MakeTheWeb"
 
 	const CFStringRef __nonnull	mDeviceName;
 	const CFStringRef __nonnull mDeviceUID;
