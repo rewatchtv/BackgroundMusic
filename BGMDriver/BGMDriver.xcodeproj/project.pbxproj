@@ -812,7 +812,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Audio/Plug-Ins/HAL";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.getcleanshot.driver;
+				PRODUCT_BUNDLE_IDENTIFIER = pl.maketheweb.cleanshotx.driver;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = driver;
@@ -847,7 +847,7 @@
 				INSTALL_OWNER = root;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Audio/Plug-Ins/HAL";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = com.getcleanshot.driver;
+				PRODUCT_BUNDLE_IDENTIFIER = pl.maketheweb.cleanshotx.driver;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				WRAPPER_EXTENSION = driver;

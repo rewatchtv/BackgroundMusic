@@ -17,8 +17,8 @@
 //  BGM_Types.h
 //  SharedSource
 //
-//  Copyright © 2020 MakeTheWeb
 //  Copyright © 2016, 2017, 2019 Kyle Neideck
+//  Copyright © 2020 MakeTheWeb
 //
 
 #ifndef SharedSource__BGM_Types
@@ -41,7 +41,7 @@ static const char* const kBGMIssueTrackerURL = "https://github.com/kyleneideck/B
 #pragma mark IDs
 
 // TODO: Change these and the other defines to const strings?
-#define kBGMDriverBundleID           "com.getcleanshot.driver"
+#define kBGMDriverBundleID           "pl.maketheweb.cleanshotx.driver"
 #define kBGMAppBundleID              "com.bearisdriving.BGM.App"
 #define kBGMXPCHelperBundleID        "com.bearisdriving.BGM.XPCHelper"
 
@@ -84,8 +84,13 @@ static const AudioObjectPropertyElement kMasterChannel = kAudioObjectPropertyEle
 
 enum
 {
+	// A CFBoolean. True if the main BGMDevice instance is enabled. Settable, false by default.
+	kAudioDeviceCustomPropertyBGMDeviceEnabled             = 'bgen',
+	// A CFBoolean. True if the UI Sounds instance of BGMDevice is enabled. Settable, false by
+	// default.
+	kAudioDeviceCustomPropertyBGMUISoundsDeviceEnabled     = 'bgui',
     // A CFBoolean. True if the null device is enabled. Settable, false by default.
-    kAudioPlugInCustomPropertyNullDeviceActive = 'nuld'
+    kAudioPlugInCustomPropertyNullDeviceActive             = 'nuld'
 };
 
 #pragma mark BGMDevice Custom Properties
