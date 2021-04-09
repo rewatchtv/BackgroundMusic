@@ -19,6 +19,7 @@
 //
 //  Copyright © 2016, 2017, 2019 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
+//  Copyright © 2021 MakeTheWeb
 //
 
 // Self Include
@@ -124,6 +125,24 @@ BGM_Client    BGM_ClientMap::RemoveClient(UInt32 inClientID)
     }
     
     return theClient;
+}
+
+void    BGM_ClientMap::RemoveAll()
+{
+    CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
+
+    // Remove all clients from the shadow maps.
+    mClientMapShadow.clear();
+    mClientMapByPIDShadow.clear();
+    mClientMapByBundleID.clear();
+
+    // Swap the maps with their shadow maps.
+    SwapInShadowMaps();
+
+    // Remove the clients again so the maps and their shadow maps are kept identical.
+    mClientMapShadow.clear();
+    mClientMapByPIDShadow.clear();
+    mClientMapByBundleID.clear();
 }
 
 bool    BGM_ClientMap::GetClientRT(UInt32 inClientID, BGM_Client* outClient) const

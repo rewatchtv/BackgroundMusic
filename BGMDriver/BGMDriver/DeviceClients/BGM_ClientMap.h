@@ -18,6 +18,7 @@
 //  BGMDriver
 //
 //  Copyright © 2016 Kyle Neideck
+//  Copyright © 2021 MakeTheWeb
 //
 
 #ifndef __BGMDriver__BGM_ClientMap__
@@ -87,6 +88,8 @@ private:
 public:
     // Returns the removed client
     BGM_Client                                          RemoveClient(UInt32 inClientID);
+    /*! Remove all clients. */
+    void                                                RemoveAll();
     
     // These methods are functionally identical except that GetClientRT must only be called from real-time threads and GetClientNonRT
     // must only be called from non-real-time threads. Both return true if a client was found.

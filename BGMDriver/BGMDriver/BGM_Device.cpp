@@ -21,7 +21,7 @@
 //  Copyright © 2017 Andrew Tonner
 //  Copyright © 2019 Gordon Childs
 //  Copyright (C) 2013 Apple Inc. All Rights Reserved.
-//  Copyright © 2020 MakeTheWeb
+//  Copyright © 2020, 2021 MakeTheWeb
 //
 //  Based largely on SA_Device.cpp from Apple's SimpleAudioDriver Plug-In sample code. Also uses a few sections from Apple's
 //  NullAudio.c sample code (found in the same sample project).
@@ -161,6 +161,12 @@ void	BGM_Device::Activate()
 		//	Open the connection to the driver and initialize things.
 		//_HW_Open();
 
+        // Reset the clients. This does nothing if this is the first time the device has been
+        // activated. If it's not, we might still have clients registered from the previous
+        // activation. The host doesn't always call our StopIO and RemoveClient for every client
+        // when we deactivate the device, so we need to remove the old clients here.
+        mClients.RemoveAll();
+
 		mInputStream.Activate();
 		mOutputStream.Activate();
 
@@ -179,13 +185,15 @@ void	BGM_Device::Activate()
 
 		SendDeviceIsAlivePropertyNotifications();
 	}
+    else
+    {
+        LogWarning("BGM_Device::Activate: NOT activating BGM%s device. Already active.",
+                   GetObjectID() == kObjectID_Device_UI_Sounds ? " UI sounds" : "");
+    }
 }
 
 void	BGM_Device::Deactivate()
 {
-	DebugMsg("BGM_Device::Deactivate: Deactivating BGM%s device",
-			 GetObjectID() == kObjectID_Device_UI_Sounds ? " UI sounds" : "");
-
 	//	When this method is called, the object is basically dead, but we still need to be thread
 	//	safe. In this case, we also need to be safe vs. any IO threads, so we need to take both
 	//	locks.
@@ -193,6 +201,9 @@ void	BGM_Device::Deactivate()
 
 	if(IsActive())
 	{
+        DebugMsg("BGM_Device::Deactivate: Deactivating BGM%s device",
+                 GetObjectID() == kObjectID_Device_UI_Sounds ? " UI sounds" : "");
+
 		CAMutex::Locker theIOLocker(mIOMutex);
 
 		// Mark the device's sub-objects inactive.
@@ -209,6 +220,11 @@ void	BGM_Device::Deactivate()
 
 		SendDeviceIsAlivePropertyNotifications();
 	}
+    else
+    {
+        LogWarning("BGM_Device::Deactivate: NOT deactivating BGM%s device. Already inactive.",
+                   GetObjectID() == kObjectID_Device_UI_Sounds ? " UI sounds" : "");
+    }
 }
 
 void    BGM_Device::SendDeviceIsAlivePropertyNotifications()
@@ -1218,10 +1234,20 @@ void	BGM_Device::StartIO(UInt32 inClientID)
         // We only tell the hardware to start if this is the first time IO has been started.
         if(didStartIO)
         {
+            DebugMsg("BGM_Device::StartIO: Client %u started IO. IO was previously stopped for all "
+                     "clients.",
+                     inClientID);
+
             kern_return_t theError = _HW_StartIO();
             ThrowIfKernelError(theError,
                                CAException(theError),
                                "BGM_Device::StartIO: Failed to start because of an error calling down to the driver.");
+        }
+        else
+        {
+            DebugMsg("BGM_Device::StartIO: Client %u started IO. IO was NOT previously stopped for "
+                     "all clients.",
+                     inClientID);
         }
         
         clientIsBGMApp = mClients.IsBGMApp(inClientID);
@@ -1273,46 +1299,57 @@ void	BGM_Device::StopIO(UInt32 inClientID)
 	//	we tell the hardware to stop if this is the last stop call
 	if(didStopIO)
 	{
+        DebugMsg("BGM_Device::StopIO: Client %u stopped IO. All clients have stopped IO.",
+                 inClientID);
 		_HW_StopIO();
 	}
+    else
+    {
+        DebugMsg("BGM_Device::StopIO: Client %u stopped IO. NOT all clients have stopped IO.",
+                 inClientID);
+    }
 }
 
 void	BGM_Device::GetZeroTimeStamp(Float64& outSampleTime, UInt64& outHostTime, UInt64& outSeed)
 {
-	// accessing the buffers requires holding the IO mutex
-	CAMutex::Locker theIOLocker(mIOMutex);
-    
-    if(mWrappedAudioEngine != NULL)
+    // Accessing mLoopbackTime requires holding the IO mutex.
+    CAMutex::Locker theIOLocker(mIOMutex);
+
+    // We base our timing on the host. This is mostly from Apple's NullAudio.c sample code.
+
+    // Get the current host time.
+    UInt64 theCurrentHostTime = CAHostTimeBase::GetTheCurrentTime();
+
+    // Calculate the next host time.
+    Float64 theHostTicksPerRingBuffer =
+        mLoopbackTime.hostTicksPerFrame * kLoopbackRingBufferFrameSize;
+    Float64 theHostTickOffset =
+        static_cast<Float64>(mLoopbackTime.numberTimeStamps + 1) * theHostTicksPerRingBuffer;
+    UInt64 theNextHostTime = mLoopbackTime.anchorHostTime + static_cast<UInt64>(theHostTickOffset);
+
+    // Go to the next time if the next host time is less than the current time.
+    if(theNextHostTime <= theCurrentHostTime)
     {
+        mLoopbackTime.numberTimeStamps++;
     }
-    else
-    {
-        // Without a wrapped device, we base our timing on the host. This is mostly from Apple's NullAudio.c sample code
-    	UInt64 theCurrentHostTime;
-    	Float64 theHostTicksPerRingBuffer;
-    	Float64 theHostTickOffset;
-    	UInt64 theNextHostTime;
-    	
-    	//	get the current host time
-        theCurrentHostTime = CAHostTimeBase::GetTheCurrentTime();
-    	
-    	//	calculate the next host time
-    	theHostTicksPerRingBuffer = mLoopbackTime.hostTicksPerFrame * kLoopbackRingBufferFrameSize;
-    	theHostTickOffset = static_cast<Float64>(mLoopbackTime.numberTimeStamps + 1) * theHostTicksPerRingBuffer;
-    	theNextHostTime = mLoopbackTime.anchorHostTime + static_cast<UInt64>(theHostTickOffset);
-    	
-    	//	go to the next time if the next host time is less than the current time
-    	if(theNextHostTime <= theCurrentHostTime)
-    	{
-            mLoopbackTime.numberTimeStamps++;
-    	}
-    	
-    	//	set the return values
-    	outSampleTime = mLoopbackTime.numberTimeStamps * kLoopbackRingBufferFrameSize;
-    	outHostTime = static_cast<UInt64>(mLoopbackTime.anchorHostTime + (static_cast<Float64>(mLoopbackTime.numberTimeStamps) * theHostTicksPerRingBuffer));
-        // TODO: I think we should increment outSeed whenever this device switches to/from having a wrapped engine
-    	outSeed = 1;
-    }
+
+    // Set the return values.
+    outSampleTime = mLoopbackTime.numberTimeStamps * kLoopbackRingBufferFrameSize;
+    outHostTime = static_cast<UInt64>(
+        mLoopbackTime.anchorHostTime +
+        (static_cast<Float64>(mLoopbackTime.numberTimeStamps) * theHostTicksPerRingBuffer));
+    outSeed = mLoopbackTime.seed;
+
+#if DetailedIOLogging
+    DebugMsg("GZTS theCurrentHostTime %llu mLoopbackTime.hostTicksPerFrame %f "
+             "theHostTicksPerRingBuffer %f mLoopbackTime.numberTimeStamps %llu "
+             "theHostTickOffset %f mLoopbackTime.anchorHostTime %llu theNextHostTime %llu",
+             theCurrentHostTime, mLoopbackTime.hostTicksPerFrame, theHostTicksPerRingBuffer,
+             mLoopbackTime.numberTimeStamps, theHostTickOffset, mLoopbackTime.anchorHostTime,
+             theNextHostTime);
+    DebugMsg("GZTS outSampleTime %f outHostTime %llu outSeed %llu",
+             outSampleTime, outHostTime, outSeed);
+#endif
 }
 
 void	BGM_Device::WillDoIOOperation(UInt32 inOperationID, bool& outWillDo, bool& outWillDoInPlace) const
@@ -1493,6 +1530,8 @@ void	BGM_Device::ReadInputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime,
         case kCARingBufferError_CPUOverload:
             // Write silence to the buffer.
             memset(outBuffer, 0, abl.mBuffers[0].mDataByteSize);
+            // Not a warning because we don't ever want to log on an IO thread in release builds.
+            DebugMsg("BGM_Device::ReadInputData: CPU overload");
             break;
         case kCARingBufferError_TooMuch:
             // Should be impossible, but handle it just in case. Write silence to the buffer and
@@ -1504,6 +1543,18 @@ void	BGM_Device::ReadInputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime,
         default:
             throw CAException(kAudioHardwareUnspecifiedError);
     }
+
+#if DetailedIOLogging
+    DebugMsg("Dist from prev input: %f (buf size %u, prev %llu)",
+             (inSampleTime - mLastInputSampleTime),
+             inIOBufferFrameSize,
+             mLastInputBufferSize);
+
+    mLastInputSampleTime = inSampleTime;
+    mLastInputBufferSize = inIOBufferFrameSize;
+
+    DebugMsg("Read head to write head dist: %f", (mLastOutputSampleTime - inSampleTime));
+#endif
 }
 
 void	BGM_Device::WriteOutputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime, const void* inBuffer)
@@ -1532,6 +1583,22 @@ void	BGM_Device::WriteOutputData(UInt32 inIOBufferFrameSize, Float64 inSampleTim
     {
         Throw(CAException(err));
     }
+
+    if (err == kCARingBufferError_CPUOverload)
+    {
+        // Not a warning because we don't ever want to log on an IO thread in release builds.
+        DebugMsg("BGM_Device::WriteOutputData: CPU overload");
+    }
+
+#if DetailedIOLogging
+    DebugMsg("Dist from prev input: %f (buf size %u, prev %llu)",
+             (inSampleTime - mLastOutputSampleTime),
+             inIOBufferFrameSize,
+             mLastOutputBufferSize);
+
+    mLastOutputSampleTime = inSampleTime;
+    mLastOutputBufferSize = inIOBufferFrameSize;
+#endif
 }
 
 void	BGM_Device::ApplyClientRelativeVolume(UInt32 inClientID, UInt32 inIOBufferFrameSize, void* ioBuffer) const
@@ -1832,6 +1899,7 @@ kern_return_t	BGM_Device::_HW_StartIO()
     // Reset the loopback timing values
     mLoopbackTime.numberTimeStamps = 0;
     mLoopbackTime.anchorHostTime = CAHostTimeBase::GetTheCurrentTime();
+    mLoopbackTime.seed++;
     // ...and the most-recent audible/silent sample times. mAudibleState is usually guarded by the
 	// IO mutex, but we haven't started IO yet (and this function can only be called by one thread
 	// at a time).

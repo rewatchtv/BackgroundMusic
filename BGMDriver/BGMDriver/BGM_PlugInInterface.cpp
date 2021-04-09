@@ -19,6 +19,7 @@
 //
 //  Copyright © 2016, 2017 Kyle Neideck
 //  Copyright (C) 2013 Apple Inc. All Rights Reserved.
+//  Copyright © 2021 MakeTheWeb
 //
 //  Based largely on SA_PlugIn.cpp from Apple's SimpleAudioDriver Plug-In sample code.
 //  https://developer.apple.com/library/mac/samplecode/AudioDriverExamples

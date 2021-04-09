@@ -18,6 +18,7 @@
 //  BGMDriver
 //
 //  Copyright © 2016 Kyle Neideck
+//  Copyright © 2021 MakeTheWeb
 //
 
 #ifndef __BGMDriver__BGM_Clients__
@@ -66,6 +67,11 @@ public:
     
     void                                AddClient(BGM_Client inClient);
     void                                RemoveClient(const UInt32 inClientID);
+    /*!
+     Remove all clients. If any were doing IO, they will be assumed to have stopped, but no notifications will
+     be sent.
+     */
+    void                                RemoveAll();
     
 private:
     // Only BGM_TaskQueue is allowed to call these (through the BGM_ClientTasks interface). We get notifications

@@ -19,6 +19,7 @@
 //
 //  Copyright © 2016, 2017, 2019 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
+//  Copyright © 2021 MakeTheWeb
 //
 
 // Self Include
@@ -90,6 +91,22 @@ void    BGM_Clients::RemoveClient(const UInt32 inClientID)
     }
 }
 
+void    BGM_Clients::RemoveAll()
+{
+    CAMutex::Locker theLocker(mMutex);
+
+    DebugMsg("BGM_Clients::RemoveAll: Removing all clients.");
+    mClientMap.RemoveAll();
+
+    // If BGMApp was a client, we've removed it, so clear our local copy of its client ID.
+    mBGMAppClientID = -1;
+
+    // Reset the count of clients doing IO. If the device was deactivated, the HAL may not have
+    // called StopIO for all of the previous clients.
+    mStartCount = 0;
+    mStartCountExcludingBGMApp = 0;
+}
+
 #pragma mark IO Status
 
 bool    BGM_Clients::StartIONonRT(UInt32 inClientID)
@@ -101,7 +118,9 @@ bool    BGM_Clients::StartIONonRT(UInt32 inClientID)
     BGM_Client theClient;
     bool didFindClient = mClientMap.GetClientNonRT(inClientID, &theClient);
     
-    ThrowIf(!didFindClient, BGM_InvalidClientException(), "BGM_Clients::StartIO: Cannot start IO for client that was never added");
+    ThrowIf(!didFindClient,
+            BGM_InvalidClientException(),
+            "BGM_Clients::StartIONonRT: Cannot start IO for client that was never added");
     
     bool sendIsRunningNotification = false;
     bool sendIsRunningSomewhereOtherThanBGMAppNotification = false;
@@ -109,9 +128,11 @@ bool    BGM_Clients::StartIONonRT(UInt32 inClientID)
     if(!theClient.mDoingIO)
     {
         // Make sure we can start
-        ThrowIf(mStartCount == UINT64_MAX, CAException(kAudioHardwareIllegalOperationError), "BGM_Clients::StartIO: failed to start because the ref count was maxxed out already");
+        ThrowIf(mStartCount == UINT64_MAX,
+                CAException(kAudioHardwareIllegalOperationError),
+                "BGM_Clients::StartIONonRT: failed to start because the ref count was maxxed out already");
         
-        DebugMsg("BGM_Clients::StartIO: Client %u (%s, %d) starting IO",
+        DebugMsg("BGM_Clients::StartIONonRT: Client %u (%s, %d) starting IO",
                  inClientID,
                  CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8),
                  theClient.mProcessID);
@@ -119,11 +140,14 @@ bool    BGM_Clients::StartIONonRT(UInt32 inClientID)
         mClientMap.StartIONonRT(inClientID);
         
         mStartCount++;
+        DebugMsg("BGM_Clients::StartIONonRT: %llu clients currently doing IO", mStartCount);
         
         // Update mStartCountExcludingBGMApp
         if(!IsBGMApp(inClientID))
         {
-            ThrowIf(mStartCountExcludingBGMApp == UINT64_MAX, CAException(kAudioHardwareIllegalOperationError), "BGM_Clients::StartIO: failed to start because mStartCountExcludingBGMApp was maxxed out already");
+            ThrowIf(mStartCountExcludingBGMApp == UINT64_MAX,
+                    CAException(kAudioHardwareIllegalOperationError),
+                    "BGM_Clients::StartIONonRT: failed to start because mStartCountExcludingBGMApp was maxxed out already");
             
             mStartCountExcludingBGMApp++;
             
@@ -136,6 +160,14 @@ bool    BGM_Clients::StartIONonRT(UInt32 inClientID)
         // Return true if no other clients were running IO before this one started, which means the device should start IO
         didStartIO = (mStartCount == 1);
         sendIsRunningNotification = didStartIO;
+    }
+    else
+    {
+        // Not sure if this can happen, so just log a message.
+        DebugMsg("BGM_Clients::StartIONonRT: Client %u (%s, %d) is already doing IO",
+                 inClientID,
+                 CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8),
+                 theClient.mProcessID);
     }
     
     Assert(mStartCountExcludingBGMApp == mStartCount - 1 || mStartCountExcludingBGMApp == mStartCount,
@@ -155,28 +187,35 @@ bool    BGM_Clients::StopIONonRT(UInt32 inClientID)
     BGM_Client theClient;
     bool didFindClient = mClientMap.GetClientNonRT(inClientID, &theClient);
     
-    ThrowIf(!didFindClient, BGM_InvalidClientException(), "BGM_Clients::StopIO: Cannot stop IO for client that was never added");
+    ThrowIf(!didFindClient,
+            BGM_InvalidClientException(),
+            "BGM_Clients::StopIONonRT: Cannot stop IO for client that was never added");
     
     bool sendIsRunningNotification = false;
     bool sendIsRunningSomewhereOtherThanBGMAppNotification = false;
     
     if(theClient.mDoingIO)
     {
-        DebugMsg("BGM_Clients::StopIO: Client %u (%s, %d) stopping IO",
+        DebugMsg("BGM_Clients::StopIONonRT: Client %u (%s, %d) stopping IO",
                  inClientID,
                  CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8),
                  theClient.mProcessID);
         
         mClientMap.StopIONonRT(inClientID);
         
-        ThrowIf(mStartCount <= 0, CAException(kAudioHardwareIllegalOperationError), "BGM_Clients::StopIO: Underflowed mStartCount");
+        ThrowIf(mStartCount <= 0,
+                CAException(kAudioHardwareIllegalOperationError),
+                "BGM_Clients::StopIONonRT: Underflowed mStartCount");
         
         mStartCount--;
+        DebugMsg("BGM_Clients::StopIONonRT: %llu clients currently doing IO", mStartCount);
         
         // Update mStartCountExcludingBGMApp
         if(!IsBGMApp(inClientID))
         {
-            ThrowIf(mStartCountExcludingBGMApp <= 0, CAException(kAudioHardwareIllegalOperationError), "BGM_Clients::StopIO: Underflowed mStartCountExcludingBGMApp");
+            ThrowIf(mStartCountExcludingBGMApp <= 0,
+                    CAException(kAudioHardwareIllegalOperationError),
+                    "BGM_Clients::StopIONonRT: Underflowed mStartCountExcludingBGMApp");
             
             mStartCountExcludingBGMApp--;
             
@@ -189,6 +228,14 @@ bool    BGM_Clients::StopIONonRT(UInt32 inClientID)
         // Return true if we stopped IO entirely (i.e. there are no clients still running IO)
         didStopIO = (mStartCount == 0);
         sendIsRunningNotification = didStopIO;
+    }
+    else
+    {
+        // Not sure if we should throw here.
+        LogWarning("BGM_Clients::StopIONonRT: Client %u (%s, %d) NOT doing IO. Ignoring.",
+                   inClientID,
+                   CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8),
+                   theClient.mProcessID);
     }
     
     Assert(mStartCountExcludingBGMApp == mStartCount - 1 || mStartCountExcludingBGMApp == mStartCount,

@@ -20,7 +20,7 @@
 //  Copyright © 2016, 2017, 2019 Kyle Neideck
 //  Copyright © 2019 Gordon Childs
 //  Copyright (C) 2013 Apple Inc. All Rights Reserved.
-//  Copyright © 2020 MakeTheWeb
+//  Copyright © 2020, 2021 MakeTheWeb
 //
 //  Based largely on SA_Device.h from Apple's SimpleAudioDriver Plug-In sample code.
 //  https://developer.apple.com/library/mac/samplecode/AudioDriverExamples
@@ -50,6 +50,12 @@
 // System Includes
 #include <CoreFoundation/CoreFoundation.h>
 #include <pthread.h>
+
+
+// If this is enabled, the IO functions will log debug info. They'll log several messages every IO
+// cycle, which means something like every 9 ms. It will likely cause performance issues and
+// glitches, since logging is slow and not realtime safe, so it's usually best to leave it disabled.
+#define DetailedIOLogging 0
 
 
 class BGM_Device
@@ -248,7 +254,10 @@ private:
     struct {
         Float64					hostTicksPerFrame = 0.0;
         UInt64					numberTimeStamps  = 0;
-        UInt64					anchorHostTime    = 0;
+        UInt64                  anchorHostTime    = 0;
+        // Used to tell the host when we've reset the clock. Not sure it's actually doing anything
+        // currently.
+        UInt64                  seed              = 1;
     }                           mLoopbackTime;
 	
     BGM_Stream                  mInputStream;
@@ -266,6 +275,13 @@ private:
 	BGM_MuteControl				mMuteControl;
     bool                        mPendingOutputVolumeControlEnabled = true;
     bool                        mPendingOutputMuteControlEnabled   = true;
+
+#if DetailedIOLogging
+    Float64                     mLastInputSampleTime  = 0;
+    UInt64                      mLastInputBufferSize  = 0;
+    Float64                     mLastOutputSampleTime = 0;
+    UInt64                      mLastOutputBufferSize = 0;
+#endif
 
 };
 
