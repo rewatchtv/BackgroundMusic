@@ -101,7 +101,7 @@ get_build_path() {
         echo "build. Probably something like"
         echo -n "/Users/$(whoami)/Library/Developer/Xcode/DerivedData/BGM-somerandomchars/Build/Products/"
         ([[ ${USE_RELEASE_BUILD} == true ]] && echo -n "Release") || echo -n "Debug"
-        echo "/CleanShot Device.driver"
+        echo "/Rewatch Loopback Device.driver"
         cd /
         read -e -p ": /" DRIVER_PATH
         cd -
@@ -174,7 +174,7 @@ fi
 # Remove installed build
 
 HAL_PLUGINS_DIR="/Library/Audio/Plug-Ins/HAL"
-INSTALLED_DRIVER_PATH="${HAL_PLUGINS_DIR}/CleanShot Device.driver"
+INSTALLED_DRIVER_PATH="${HAL_PLUGINS_DIR}/Rewatch Loopback Device.driver"
 
 if [[ -d "${INSTALLED_DRIVER_PATH}" ]]; then
     echo "$(bold_face Removing old version of the driver)"

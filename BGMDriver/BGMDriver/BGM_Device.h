@@ -208,9 +208,9 @@ private:
     static BGM_Device* __nonnull    sInstance;
     static BGM_Device* __nonnull    sUISoundsInstance;
     
-    #define kDeviceName                 "CleanShot X Recorder"
-    #define kDeviceName_UISounds        "CleanShot X Recorder (UI Sounds)"
-    #define kDeviceManufacturerName     "MakeTheWeb"
+    #define kDeviceName                 "Rewatch Loopback Recorder"
+    #define kDeviceName_UISounds        "Rewatch Loopback Recorder (UI Sounds)"
+    #define kDeviceManufacturerName     "Rewatch"
 
 	const CFStringRef __nonnull	mDeviceName;
 	const CFStringRef __nonnull mDeviceUID;

@@ -41,16 +41,16 @@ static const char* const kBGMIssueTrackerURL = "https://github.com/kyleneideck/B
 #pragma mark IDs
 
 // TODO: Change these and the other defines to const strings?
-#define kBGMDriverBundleID           "pl.maketheweb.cleanshotx.driver"
+#define kBGMDriverBundleID           "com.rewatch.loopback.driver"
 #define kBGMAppBundleID              "com.bearisdriving.BGM.App"
 #define kBGMXPCHelperBundleID        "com.bearisdriving.BGM.XPCHelper"
 
-#define kBGMDeviceUID                "CleanShotDevice"
-#define kBGMDeviceModelUID           "CleanShotDeviceModelUID"
-#define kBGMDeviceUID_UISounds       "CleanShotDevice_UISounds"
-#define kBGMDeviceModelUID_UISounds  "CleanShotDeviceModelUID_UISounds"
-#define kBGMNullDeviceUID            "CleanShotNullDevice"
-#define kBGMNullDeviceModelUID       "CleanShotNullDeviceModelUID"
+#define kBGMDeviceUID                "RewatchDevice"
+#define kBGMDeviceModelUID           "RewatchDeviceModelUID"
+#define kBGMDeviceUID_UISounds       "RewatchDevice_UISounds"
+#define kBGMDeviceModelUID_UISounds  "RewatchDeviceModelUID_UISounds"
+#define kBGMNullDeviceUID            "RewatchNullDevice"
+#define kBGMNullDeviceModelUID       "RewatchNullDeviceModelUID"
 
 // The object IDs for the audio objects this driver implements.
 //
